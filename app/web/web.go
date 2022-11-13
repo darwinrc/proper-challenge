@@ -44,7 +44,9 @@ func (w *Web) FetchPage() error {
 // GetImages returns a slice of 'amount' images (name, url and data for a file)
 // after processing the goquery.Document and extracting them from the '<img>'
 // children from the specified selector
-func (w *Web) GetImages(selector string, amount, page, perPage int) (images []*file.File, err error) {
+func (w *Web) GetImages(selector string, amount, page, perPage int) []*file.File {
+	var images []*file.File
+
 	w.Doc.Find(selector).EachWithBreak(func(i int, s *goquery.Selection) bool {
 		item := (page-1)*perPage + i + 1
 		if item > amount {
@@ -53,17 +55,17 @@ func (w *Web) GetImages(selector string, amount, page, perPage int) (images []*f
 
 		url, _ := s.Find("img").Attr("data-src")
 		name := fmt.Sprintf("%d.jpg", item)
-		image := file.File{
+		image := &file.File{
 			Name: name,
 			Url:  url,
 		}
 		log.Printf("getting image: %v", image)
-		images = append(images, &image)
+		images = append(images, image)
 
 		return true
 	})
 
-	return
+	return images
 }
 
 // HttpGet is just a wrapper for http.Get

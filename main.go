@@ -68,10 +68,7 @@ func getImages(amount, threads, perPage int) (images []*file.File) {
 				log.Fatal(err)
 			}
 
-			pageImages, err := web.GetImages(".mu-content-card", amount, p, perPage)
-			if err != nil {
-				log.Fatal(err)
-			}
+			pageImages := web.GetImages(".mu-content-card", amount, p, perPage)
 			*images = append(*images, pageImages...)
 			<-ch
 		}(wg, &images)
