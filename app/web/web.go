@@ -25,7 +25,7 @@ type Web struct {
 func (w *Web) FetchPage() error {
 	log.Printf("fetching page: %v", w.Url)
 
-	body, err := httpGet(w.Url)
+	body, err := HttpGet(w.Url)
 	defer body.Close()
 	if err != nil {
 		return fmt.Errorf(Error.Error(), err)
@@ -52,16 +52,10 @@ func (w *Web) GetImages(selector string, amount, page, perPage int) (images []*f
 		}
 
 		url, _ := s.Find("img").Attr("data-src")
-		body, httpErr := httpGet(url)
-		if httpErr != nil {
-			err = fmt.Errorf(Error.Error(), httpErr)
-		}
-
 		name := fmt.Sprintf("%d.jpg", item)
 		image := file.File{
 			Name: name,
 			Url:  url,
-			Data: body,
 		}
 		log.Printf("getting image: %v", image)
 		images = append(images, &image)
@@ -72,7 +66,8 @@ func (w *Web) GetImages(selector string, amount, page, perPage int) (images []*f
 	return
 }
 
-func httpGet(url string) (io.ReadCloser, error) {
+// HttpGet is just a wrapper for http.Get
+func HttpGet(url string) (io.ReadCloser, error) {
 	res, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf(Error.Error(), err)

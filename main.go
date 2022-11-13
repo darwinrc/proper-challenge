@@ -1,44 +1,47 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
-	"os"
 	"proper-challenge/app/file"
 	"proper-challenge/app/web"
-	"strconv"
-	"strings"
+	"sync"
+	"time"
 )
 
 func main() {
-	var (
-		err    error
-		amount = 10
-	)
+	start := time.Now()
 
 	const (
 		perPage = 16
 	)
 
-	if len(os.Args) > 1 {
-		val := strings.Split(os.Args[1], "=")[1]
-		amount, err = strconv.Atoi(val)
-		if err != nil {
-			log.Fatal(err)
-		}
+	var (
+		err     error
+		amount  = flag.Int("amount", 10, "amount")
+		threads = flag.Int("threads", 1, "threads")
+	)
+
+	flag.Parse()
+
+	if *threads < 1 || *threads > 5 {
+		log.Fatal("threads should be between 1 and 5")
 	}
 
-	images, err := getImages(amount, perPage)
+	images, err := getImages(*amount, perPage)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := storeImages(images); err != nil {
+	if err := storeImages(images, *threads); err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Printf("%.2fs elapsed\n", time.Since(start).Seconds())
 }
 
-// getImages returns a slice of images depending on the amount and pages
+// getImages returns a slice of images depending on the amount and items per page
 func getImages(amount, perPage int) (images []*file.File, err error) {
 	baseUrl := "https://icanhas.cheezburger.com"
 
@@ -69,19 +72,36 @@ func getImages(amount, perPage int) (images []*file.File, err error) {
 	return
 }
 
-// storeImages saves the images to the local file system
-func storeImages(images []*file.File) error {
+// storeImages gets the images stream data and saves them to local file system as files
+// It executes using the number of concurrent goroutines limited by 'thread'
+func storeImages(images []*file.File, threads int) error {
 	dir := "img/"
 	if err := file.MkDir(dir); err != nil {
 		return err
 	}
 
-	for _, image := range images {
-		if err := image.Store(dir); err != nil {
-			return err
-		}
-		image.Data.Close()
+	wg := new(sync.WaitGroup)
+	ch := make(chan struct{}, threads)
+
+	for _, img := range images {
+		ch <- struct{}{}
+		wg.Add(1)
+		go func(wg *sync.WaitGroup, img *file.File) {
+			defer wg.Done()
+			var err error
+
+			img.Data, err = web.HttpGet(img.Url)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if err = img.Store(dir); err != nil {
+				log.Fatal(err)
+			}
+			img.Data.Close()
+			<-ch
+		}(wg, img)
 	}
+	wg.Wait()
 
 	return nil
 }

@@ -29,7 +29,7 @@ func (f *File) Store(dir string) error {
 	}
 	defer file.Close()
 
-	log.Printf("Storing file: %s", path)
+	log.Printf("storing file: %s", path)
 	_, err = io.Copy(file, f.Data)
 	if err != nil {
 		return fmt.Errorf(Error.Error(), err)
