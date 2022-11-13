@@ -20,9 +20,11 @@ type Web struct {
 	Doc *goquery.Document
 }
 
-// FetchDocument requests the web URL and generates a goquery.Document from
+// FetchPage requests the web URL and generates a goquery.Document from
 // the body response with the corresponding page structure
-func (w *Web) FetchDocument() error {
+func (w *Web) FetchPage() error {
+	log.Printf("fetching page: %v", w.Url)
+
 	body, err := httpGet(w.Url)
 	defer body.Close()
 	if err != nil {
@@ -39,12 +41,13 @@ func (w *Web) FetchDocument() error {
 	return nil
 }
 
-// GetImages returns an array of 'amount' images (name, url and data for a file)
+// GetImages returns a slice of 'amount' images (name, url and data for a file)
 // after processing the goquery.Document and extracting them from the '<img>'
 // children from the specified selector
-func (w *Web) GetImages(selector string, amount int) (images []*file.File, err error) {
+func (w *Web) GetImages(selector string, amount, page, perPage int) (images []*file.File, err error) {
 	w.Doc.Find(selector).EachWithBreak(func(i int, s *goquery.Selection) bool {
-		if i+1 > amount {
+		item := (page-1)*perPage + i + 1
+		if item > amount {
 			return false
 		}
 
@@ -54,13 +57,13 @@ func (w *Web) GetImages(selector string, amount int) (images []*file.File, err e
 			err = fmt.Errorf(Error.Error(), httpErr)
 		}
 
-		name := fmt.Sprintf("%d.jpg", i+1)
+		name := fmt.Sprintf("%d.jpg", item)
 		image := file.File{
 			Name: name,
 			Url:  url,
 			Data: body,
 		}
-		log.Printf("Getting image: %v", image)
+		log.Printf("getting image: %v", image)
 		images = append(images, &image)
 
 		return true

@@ -22,8 +22,6 @@ type File struct {
 // Store saves a file to the dir specified,
 // creating the dir if it doesn't exist
 func (f *File) Store(dir string) error {
-	defer f.Data.Close()
-
 	path := dir + f.Name
 	file, err := os.Create(path)
 	if err != nil {
