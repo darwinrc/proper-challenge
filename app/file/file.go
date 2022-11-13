@@ -23,9 +23,6 @@ type File struct {
 // creating the dir if it doesn't exist
 func (f *File) Store(dir string) error {
 	defer f.Data.Close()
-	if err := mkDir(dir); err != nil {
-		return err
-	}
 
 	path := dir + f.Name
 	file, err := os.Create(path)
@@ -43,11 +40,15 @@ func (f *File) Store(dir string) error {
 	return nil
 }
 
-func mkDir(dir string) error {
-	if _, err := os.Stat(dir); errors.Is(err, os.ErrNotExist) {
-		if err := os.Mkdir(dir, os.ModePerm); err != nil {
-			return fmt.Errorf(Error.Error(), err)
-		}
+func MkDir(dir string) error {
+	// Delete dir files if exist
+	if err := os.RemoveAll(dir); err != nil {
+		return fmt.Errorf(Error.Error(), err)
+	}
+
+	// Create dir
+	if err := os.Mkdir(dir, os.ModePerm); err != nil {
+		return fmt.Errorf(Error.Error(), err)
 	}
 
 	return nil
