@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 )
 
@@ -18,8 +19,10 @@ type File struct {
 	Data io.ReadCloser
 }
 
-// Store saves a file to the dir specified, creating the dir if it doesn't exist
+// Store saves a file to the dir specified,
+// creating the dir if it doesn't exist
 func (f *File) Store(dir string) error {
+	defer f.Data.Close()
 	if err := mkDir(dir); err != nil {
 		return err
 	}
@@ -30,8 +33,8 @@ func (f *File) Store(dir string) error {
 		return fmt.Errorf(Error.Error(), err)
 	}
 	defer file.Close()
-	defer f.Data.Close()
 
+	log.Printf("Storing file: %s", path)
 	_, err = io.Copy(file, f.Data)
 	if err != nil {
 		return fmt.Errorf(Error.Error(), err)
