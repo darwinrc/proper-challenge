@@ -10,7 +10,7 @@ import (
 
 type App struct{}
 
-// GetImages returns a slice of images depending on the amount and items per page
+// GetImages returns a slice of images (files) depending on the 'amount' and items 'per page'
 // It executes using the number of concurrent goroutines limited by 'thread'
 func (a *App) GetImages(amount, threads, perPage int) []*file.File {
 	pages := amount / perPage
@@ -47,7 +47,7 @@ func (a *App) GetImages(amount, threads, perPage int) []*file.File {
 	return images
 }
 
-// storeImages gets the images stream data and saves them to local file system as files
+// StoreImages gets the images stream data and saves them to local file system as files
 // It executes using the number of concurrent goroutines limited by 'thread'
 func (a *App) StoreImages(images []*file.File, threads int) {
 	dir := "img/"
