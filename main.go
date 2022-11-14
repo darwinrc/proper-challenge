@@ -39,16 +39,15 @@ func main() {
 
 // getImages returns a slice of images depending on the amount and items per page
 // It executes using the number of concurrent goroutines limited by 'thread'
-func getImages(amount, threads, perPage int) (images []*file.File) {
-	baseUrl := "https://icanhas.cheezburger.com"
-
+func getImages(amount, threads, perPage int) []*file.File {
 	pages := amount / perPage
 	if amount%perPage != 0 {
 		pages += 1
 	}
 
-	wg := new(sync.WaitGroup)
-	ch := make(chan struct{}, threads)
+	var images []*file.File
+	ch := make(chan []*file.File, threads)
+	baseUrl := "https://icanhas.cheezburger.com"
 
 	for p := 1; p <= pages; p++ {
 		url := baseUrl
@@ -59,24 +58,20 @@ func getImages(amount, threads, perPage int) (images []*file.File) {
 			Url: url,
 		}
 
-		ch <- struct{}{}
-		wg.Add(1)
-
-		go func(wg *sync.WaitGroup, images *[]*file.File) {
-			defer wg.Done()
+		go func(ch chan []*file.File) {
 			if err := web.FetchPage(); err != nil {
 				log.Fatal(err)
 			}
 
 			pageImages := web.GetImages(".mu-content-card", amount, p, perPage)
-			*images = append(*images, pageImages...)
-			<-ch
-		}(wg, &images)
+			ch <- pageImages
+		}(ch)
+
+		pageImages := <-ch
+		images = append(images, pageImages...)
 	}
 
-	wg.Wait()
-
-	return
+	return images
 }
 
 // storeImages gets the images stream data and saves them to local file system as files
