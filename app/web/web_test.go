@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestWeb_GetImages(t *testing.T) {
+func TestWeb_GetPageImages(t *testing.T) {
 	data, err := ioutil.ReadFile("../../test/test_doc.html")
 	assert.Nil(t, err)
 	assert.NotNil(t, data)
@@ -22,7 +22,7 @@ func TestWeb_GetImages(t *testing.T) {
 		Doc: doc,
 	}
 
-	images := w.GetImages(".mu-content-card", 10, 1, 16)
+	images := w.GetPageImages(".mu-content-card", 10, 1, 16)
 	assert.NotNil(t, images)
 
 	assert.Equal(t, 10, len(images))

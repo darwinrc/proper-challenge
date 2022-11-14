@@ -41,10 +41,10 @@ func (w *Web) FetchPage() error {
 	return nil
 }
 
-// GetImages returns a slice of 'amount' images (name, url and data for a file)
+// GetPageImages returns a slice of 'amount' images (name, url and data for a file)
 // after processing the goquery.Document and extracting them from the '<img>'
 // children from the specified selector
-func (w *Web) GetImages(selector string, amount, page, perPage int) []*file.File {
+func (w *Web) GetPageImages(selector string, amount, page, perPage int) []*file.File {
 	var images []*file.File
 
 	w.Doc.Find(selector).EachWithBreak(func(i int, s *goquery.Selection) bool {
