@@ -46,7 +46,7 @@ func TestApp_StoreImages(t *testing.T) {
 
 	app.StoreImages(files, 5)
 
-	img, err := os.Open("../img/1.jpg")
+	img, err := os.Open("img/1.jpg")
 	defer img.Close()
 	assert.Nil(t, err)
 	assert.NotNil(t, img)
@@ -55,7 +55,7 @@ func TestApp_StoreImages(t *testing.T) {
 	stat, err := img.Stat()
 	assert.Nil(t, err)
 	assert.NotNil(t, stat)
-	assert.Equal(t, int64(119096), stat.Size())
+	assert.Equal(t, int64(62910), stat.Size())
 
 	img5, err := os.Open("../img/5.jpg")
 	defer img.Close()
@@ -72,4 +72,8 @@ func TestApp_StoreImages(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, dir)
 	assert.Equal(t, 5, len(dir))
+
+	if err := os.RemoveAll("img"); err != nil {
+		t.Log(err)
+	}
 }
